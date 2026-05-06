@@ -38,6 +38,37 @@ def gallery():
 def events():
     return render_template("events.html")
 
+@app.route("/reviews", methods=["GET", "POST"])
+def reviews_page():
+    if request.method == "POST":
+        name = request.form["name"]
+        message = request.form["message"]
+
+        reviews.append({"name": name, "message": message})
+
+    html = """
+    <h1>Customer Reviews</h1>
+
+    <form method="POST">
+        Name:<br>
+        <input name="name" required><br><br>
+
+        Review:<br>
+        <textarea name="message" required></textarea><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <hr>
+    <h2>All Reviews</h2>
+    """
+
+    for r in reviews:
+        html += f"<p><b>{r['name']}</b>: {r['message']}</p><hr>"
+
+    html += "<a href='/'>Back Home</a>"
+    return html
+
 # ---------------- BOOKING PAGE ----------------
 @app.route("/book", methods=["GET", "POST"])
 def book():
