@@ -32,6 +32,10 @@ def home():
 def gallery():
     return render_template("gallery.html")
 
+@app.route("/events")
+def events():
+    return render_template("events.html")
+
 # ---------------- BOOKING PAGE ----------------
 @app.route("/book", methods=["GET", "POST"])
 def book():
