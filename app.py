@@ -28,6 +28,10 @@ init_db()
 def home():
     return render_template("home.html")
 
+@app.route("/gallery")
+def gallery():
+    return render_template("gallery.html")
+
 # ---------------- BOOKING PAGE ----------------
 @app.route("/book", methods=["GET", "POST"])
 def book():
