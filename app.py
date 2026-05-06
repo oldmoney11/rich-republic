@@ -3,6 +3,8 @@ import sqlite3
 
 app = Flask(__name__)
 
+reviews = []
+
 # ---------------- DATABASE SETUP ----------------
 def init_db():
     conn = sqlite3.connect("bookings.db")
