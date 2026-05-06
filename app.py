@@ -3,8 +3,6 @@ import sqlite3
 
 app = Flask(__name__)
 
-reviews = []
-
 # ---------------- DATABASE SETUP ----------------
 def init_db():
     conn = sqlite3.connect("bookings.db")
@@ -23,7 +21,20 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
+def init_reviews_db():
+    conn = sqlite3.connect("reviews.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            message TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_reviews_db()
 
 # ---------------- HOME ----------------
 @app.route("/")
@@ -44,7 +55,11 @@ def reviews_page():
         name = request.form["name"]
         message = request.form["message"]
 
-        reviews.append({"name": name, "message": message})
+        conn = sqlite3.connect("reviews.db")
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO reviews (name, message) VALUES (?, ?)", (name, message))
+        conn.commit()
+        conn.close()
 
     html = """
     <h1>Customer Reviews</h1>
@@ -63,8 +78,14 @@ def reviews_page():
     <h2>All Reviews</h2>
     """
 
-    for r in reviews:
-        html += f"<p><b>{r['name']}</b>: {r['message']}</p><hr>"
+    conn = sqlite3.connect("reviews.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, message FROM reviews")
+    data = cursor.fetchall()
+    conn.close()
+
+    for row in data:
+        html += f"<p><b>{row[0]}</b>: {row[1]}</p><hr>"
 
     html += "<a href='/'>Back Home</a>"
     return html
