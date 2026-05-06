@@ -36,6 +36,32 @@ def init_reviews_db():
 
 init_reviews_db()
 
+def get_multiplier(package):
+    if package == "Solo Explorer":
+        return 1
+    elif package == "Couple Escape":
+        return 1.8
+    elif package == "Elite Experience":
+        return 2.5
+    return 1
+
+
+def calculate_price(destination, package, people):
+    conn = sqlite3.connect("pricing.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT regular_price FROM pricing WHERE destination = ?", (destination,))
+    data = cursor.fetchone()
+    conn.close()
+
+    if not data:
+        return 0
+
+    base_price = data[0]
+    multiplier = get_multiplier(package)
+
+    return int(base_price * multiplier * people)
+
 # ---------------- HOME ----------------
 @app.route("/")
 def home():
@@ -137,8 +163,9 @@ def book():
 
         Package:<br>
         <select name="package">
-            <option>Regular</option>
-            <option>VIP</option>
+            <option>Solo Explorer</option>
+            <option>Couple Escape</option>
+            <option>Elite Experience</option>
         </select><br><br>
 
         <button type="submit">Submit</button>
@@ -150,27 +177,25 @@ def book():
 def admin():
     conn = sqlite3.connect("bookings.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM bookings")
+    cursor.execute("SELECT name, phone, destination, date, people, package FROM bookings")
     data = cursor.fetchall()
     conn.close()
 
-    output = "<h1>All Bookings</h1>"
+    total_revenue = 0
+    rows_html = ""
 
     for row in data:
-        output += f"""
+        name, phone, destination, date, people, package = row
+        people = int(people)
+        total = calculate_price(destination, package, people)
+        total_revenue += total
+
+        rows_html += f"""
         <p>
-        ID: {row[0]} <br>
-        Name: {row[1]} <br>
-        Phone: {row[2]} <br>
-        Destination: {row[3]} <br>
-        Date: {row[4]} <br>
-        People: {row[5]} <br>
-        Package: {row[6]}
+        <b>{name}</b> | {phone} | {destination} | {date} | {people} people | {package} | GHS {total}
         </p>
         <hr>
         """
 
-    return output
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    output = f"<h1>Rich Republic Admin Dashboard</h1><hr><h2>Total Revenue: GHS {total_revenue}</h2><hr>"
+    output += rows_html
